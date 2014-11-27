@@ -2,7 +2,7 @@ SAVAH DATA PROCESS
 =====
 1. The file which contains all the logic is main.py.
 
-2. The script insert the outcome in a table in SQLite. The database is the file called havas.db
+2. The script insert the output in a table in SQLite. The database is the file called havas.db
 
 3. These files are also hosted in a AWS server where there is a chart which visualizes some parameters of the table: http://54.69.30.117/
 
