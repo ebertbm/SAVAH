@@ -5,6 +5,7 @@ import sqlite3 as lite
 
 import sys
 import csv
+import os
 import simplejson
 from openpyxl import load_workbook
 import datetime
@@ -17,25 +18,29 @@ import urllib2
 #Define paths
 INTERNAL_SERVER = 'WRITE SERVER ROUTE'
 URL_FTP_SERVER = "http://www.client.com/data/media/"
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+
 
 
 #Insert output into a SQLite database
 def insertdb(data):
-	con = lite.connect('havas.db')
+	con = lite.connect(ROOT_DIR+'/havas.db')
 	with con:
 		cur = con.cursor()
 		cur.executemany("INSERT INTO Media VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
 
+
+	print "Output has been generated in the table Media"
 	generateJSON()
 
-#Generate a JSON file which is going to be read by the javascript app that present a chart
+#Generate a JSON file which will be read by a javascript app that present a chart
 def generateJSON():
-	con = lite.connect('havas.db')
+	con = lite.connect(ROOT_DIR+'/havas.db')
 	datadict = []
 
 	with con:
 		cur = con.cursor()
-		#Query CR per Campaign in the Database
+		#Query Conversation Rate per Campaign in the Database
 		schema = cur.execute("SELECT campaign, ROUND(avg(CR), 2) cr_avg FROM Media group by campaign order by cr_avg desc")
 		for x in schema.fetchall():
 			media = {
@@ -45,9 +50,12 @@ def generateJSON():
 			datadict.append(media)
 
 
-	print simplejson.dumps(datadict)
-	out_file = open("media.json",'w')
+	#print simplejson.dumps(datadict)
+	out_file = open(ROOT_DIR+"/media.json",'w')
 	simplejson.dump(datadict,out_file, indent=4)     #Generate the JSON file
+	print "Generate JSON file"
+	print "******Process succesfully executed*****"
+
 
 	out_file.close()
 
@@ -87,8 +95,9 @@ def getcpa(clicks, cost, sales):
 #Open the lookup file of campaigns and products
 #Create a dictionary that include campaigns and products
 def open_mapping():
-	# f = urllib2.urlopen(URL_FTP_SERVER) # Read the file from a FTP server assuming that has OPEN permissions to consult from a HTTP Request
-	f = open("campaigns to products.txt") # READING IN THE LOCAL ROOT FOR TEST PURPOSES
+	f = open(ROOT_DIR+"/campaigns to products.txt") # READ IN THE LOCAL ROOT
+	print "Open the file: "+"/campaigns to products.txt"
+
 	campaigns = {} # initialize an empty dictionary
 	for line in f:
 		campaign, product  = line.split("\t")
@@ -112,14 +121,16 @@ def process_costfile(ws, today, saturday, sunday):
 
 #Open the excel file "costs"
 def open_costs():
-	wb2 = load_workbook('costs.xlsx', use_iterators = True)
+	wb2 = load_workbook(ROOT_DIR+'/costs.xlsx', use_iterators = True) #ROOT_DIR could be replaced by INTERNAL_SERVER path.
 	ws = wb2.get_sheet_by_name('Sheet1')
-	today = date.today()
+	print "Open the file: "+"/costs.xlsx"
+	today = datetime.date(2014,11,27) #Static Date for testing
+	#today = date.today() #Must have a date from today
 	data =[]
 
 #Validate which weekday is today to know which records to process
 	if today.weekday() in (1,2,3,4):    # This is for Tuesday, Wednesday, Thursday, Friday
-		data = process_costfile(ws, today, today, today) #Process only the records of today date
+		data = process_costfile(ws, today, today, today) #Process today's only records
 	elif today.weekday() == 0: #This is Monday
 		sunday = date.today() - timedelta(1) 
 		saturday = date.today() - timedelta(2)
@@ -135,13 +146,16 @@ def open_mediadata(today):
 	costs = open_costs()
 	data = []
 
-	today='20141127' #Assign a date for test purpose. Comment sentence if want to be today date.
+	today='20141127' #Assign a date in this format for test purpose. Comment sentence if want to be today date.
+	print "Start process for day: "+today
 
 	try:
-		with open(today+'aggregate.csv', 'rU') as csvfile:   #Read the .csv file
+		# with open(URL_FTP_SERVER+'/'+today+'/aggregate.csv', 'rU') as csvfile: # Read the file from a FTP server assuming that has OPEN permissions to consult from a HTTP Request
+		with open(ROOT_DIR+'/'+today+'aggregate.csv', 'rU') as csvfile:   #Read the .csv file in Local ROOT
 			reader = csv.reader(csvfile, delimiter=',', skipinitialspace=True)
+			print "Open the file: "+today+'aggregate.csv'
 			datecost = date.today()
-
+			print "Join all the files..........."
 			for columnData in reader:
 				if campaigns.has_key(columnData[1]):
 					for rowCost in costs:
@@ -168,7 +182,7 @@ def open_mediadata(today):
 
 
 
-
+#*****THE SCRIPT START HERE*******#
 def main():
 
 	#campaigns = open_mapping()
