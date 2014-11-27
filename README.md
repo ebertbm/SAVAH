@@ -1,5 +1,12 @@
-SAVAH
+SAVAH DATA PROCESS
 =====
+1. The file which contains all the logic is main.py.
 
-Create a Crontab with this settings:
-13 * * * * python /Users/ebertoburgosmendoza/Desktop/Interview/main.py   >> /var/log/script_output.log 2>&1
+2. The script insert the outcome in a table in SQLite.
+
+3. These files are also hosted in a AWS server where there is a chart which visualizes some parameters of the table: http://54.69.30.117/
+
+4. The script is developed to run once per day using a Crontab to automate the processes. For testing purpose the crontab not running.
+    Create a Crontab with this command:
+    13 20 * * * python /Users/ebertoburgosmendoza/Desktop/Interview/main.py   >> /var/log/script_output.log 2>&1
+
