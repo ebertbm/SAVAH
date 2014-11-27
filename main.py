@@ -5,10 +5,18 @@ import sqlite3 as lite
 
 import sys
 import csv
+import simplejson
 from openpyxl import load_workbook
 import datetime
 from datetime import date, timedelta
 import pdb
+import urllib2 
+
+
+
+#Define paths
+INTERNAL_SERVER = 'WRITE SERVER ROUTE'
+URL_FTP_SERVER = "http://www.client.com/data/media/"
 
 
 #Insert output into a SQLite database
@@ -17,7 +25,31 @@ def insertdb(data):
 	with con:
 		cur = con.cursor()
 		cur.executemany("INSERT INTO Media VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
-		print "In the DB"
+
+	generateJSON()
+
+#Generate a JSON file which is going to be read by the javascript app that present a chart
+def generateJSON():
+	con = lite.connect('havas.db')
+	datadict = []
+
+	with con:
+		cur = con.cursor()
+		#Query CR per Campaign in the Database
+		schema = cur.execute("SELECT campaign, ROUND(avg(CR), 2) cr_avg FROM Media group by campaign order by cr_avg desc")
+		for x in schema.fetchall():
+			media = {
+			'campaign' : x[0],
+			'cr_avg' : x[1]
+			}
+			datadict.append(media)
+
+
+	print simplejson.dumps(datadict)
+	out_file = open("media.json",'w')
+	simplejson.dump(datadict,out_file, indent=4)     #Generate the JSON file
+
+	out_file.close()
 
 #Get the CTR
 def getctr(clicks, impressions):
@@ -55,7 +87,8 @@ def getcpa(clicks, cost, sales):
 #Open the lookup file of campaigns and products
 #Create a dictionary that include campaigns and products
 def open_mapping():
-	f = open("campaigns to products.txt")
+	# f = urllib2.urlopen(URL_FTP_SERVER) # Read the file from a FTP server assuming that has OPEN permissions to consult from a HTTP Request
+	f = open("campaigns to products.txt") # READING IN THE LOCAL ROOT FOR TEST PURPOSES
 	campaigns = {} # initialize an empty dictionary
 	for line in f:
 		campaign, product  = line.split("\t")
@@ -102,10 +135,10 @@ def open_mediadata(today):
 	costs = open_costs()
 	data = []
 
-	#today=0
+	today='20141127' #Assign a date for test purpose. Comment sentence if want to be today date.
 
 	try:
-		with open('20141127aggregate.csv', 'rU') as csvfile:   #Read the .csv file
+		with open(today+'aggregate.csv', 'rU') as csvfile:   #Read the .csv file
 			reader = csv.reader(csvfile, delimiter=',', skipinitialspace=True)
 			datecost = date.today()
 
@@ -142,7 +175,6 @@ def main():
 	today = date.today().strftime("%Y%m%d")
 	open_mediadata(today)
 	#open_costs()
-
 
 
 

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Chart.js demo</title>
+		<script src='Chart.js-master/Chart.min.js'></script>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+     </head>
+     <body>
+	 <h1>Conversion Rate per Campaign</h1>
+         <canvas id="canvas" height="500" width="800"></canvas>
+        <script type="text/javascript">
+  $.getJSON('media.json', function(data) {
+  
+  var chartjsData = [];
+  
+       for (var i in data) {
+            chartjsData.push(data[i].cr_avg); 
+        }
+  
+  var barChartData = {
+            labels :["CC x-mas","life insurance ppc","Purchace card promo", "Holiday insurance programmatic", "Credit cards november sale", "Holidays xmas promo", "Travel insurance november sale", "life insurance main"],datasets : [
+                {
+                    fillColor : "rgba(220,280,220,0.5)",
+                    strokeColor : "rgba(220,220,220,1)",
+                    data : chartjsData
+
+                }
+            ]
+        };
+    var myLine = new Chart(document.getElementById("canvas").getContext("2d")).Bar(barChartData);
+   
+   
+
+  });
+</script>
+
+ </body>
+ </html>
