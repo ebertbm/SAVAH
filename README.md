@@ -1,5 +1,11 @@
 SAVAH DATA PROCESS
 =====
+
+Technology used:
+    1. Python
+    2. SQLite
+    3. Javascript (chart)
+
 1. The file which contains all the logic is main.py.
 
 2. The script insert the output in a table in SQLite. The database is the file called havas.db
